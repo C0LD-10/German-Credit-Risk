@@ -1,0 +1,50 @@
+{
+  "model_name": "Logistic Regression",
+  "target_mode": "proxy",
+  "numeric_features": [
+    "Age",
+    "log_credit_amount",
+    "Duration",
+    "installment_proxy",
+    "saving_ord",
+    "checking_ord",
+    "financial_buffer",
+    "Job"
+  ],
+  "categorical_features": [
+    "Housing",
+    "Purpose"
+  ],
+  "cv_results": [
+    {
+      "model": "Logistic Regression",
+      "cv_roc_auc_mean": 0.9973333333333333,
+      "cv_roc_auc_std": 0.0015060695766905595,
+      "cv_pr_auc_mean": 0.9939993852585338,
+      "cv_pr_auc_std": 0.003252253591482711
+    },
+    {
+      "model": "Gradient Boosting",
+      "cv_roc_auc_mean": 0.9938624338624338,
+      "cv_roc_auc_std": 0.003646113095002456,
+      "cv_pr_auc_mean": 0.9872393075752981,
+      "cv_pr_auc_std": 0.007687878959971828
+    },
+    {
+      "model": "Random Forest",
+      "cv_roc_auc_mean": 0.9867513227513227,
+      "cv_roc_auc_std": 0.00528990464742591,
+      "cv_pr_auc_mean": 0.9733804263020438,
+      "cv_pr_auc_std": 0.010002129377544583
+    }
+  ],
+  "test_metrics": {
+    "roc_auc": 0.9986285714285714,
+    "pr_auc": 0.9968077400481121,
+    "brier_score": 0.02102292313499107,
+    "threshold_used": 0.5
+  },
+  "cost_sensitive_threshold": 0.34,
+  "long_duration_threshold": 24.0,
+  "random_state": 42
+}
