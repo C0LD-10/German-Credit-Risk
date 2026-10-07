@@ -1,0 +1,109 @@
+# =============================================================================
+# German Credit Risk — Project Configuration
+#
+# Single source of truth for paths, reproducibility, and modeling parameters.
+# Every script in src/ reads from this file instead of hard-coding values, so
+# an experiment change (e.g. a different cost ratio, a different k range)
+# requires editing one file, not hunting through code.
+# =============================================================================
+
+project:
+  name: "german-credit-risk"
+  random_state: 42
+
+paths:
+  raw_data: "data/raw/german_credit_data.csv"
+  processed_data: "data/processed/processed_applicants.parquet"
+  model_dir: "models"
+  model_file: "models/best_model.joblib"
+  preprocessor_metadata: "models/feature_metadata.json"
+  reports_dir: "reports"
+  figures_dir: "reports/figures"
+
+# -----------------------------------------------------------------------------
+# Data dictionary / schema the loader validates against before anything else
+# runs. Catches silent schema drift (renamed/reordered/missing columns) early.
+# -----------------------------------------------------------------------------
+schema:
+  required_columns:
+    - "Age"
+    - "Sex"
+    - "Job"
+    - "Housing"
+    - "Saving accounts"
+    - "Checking account"
+    - "Credit amount"
+    - "Duration"
+    - "Purpose"
+  saving_account_order: ["none", "little", "moderate", "quite rich", "rich"]
+  checking_account_order: ["none", "little", "moderate", "rich"]
+  job_labels:
+    0: "unemployed/unskilled-nonres."
+    1: "unskilled-resident"
+    2: "skilled"
+    3: "highly skilled/mgmt"
+
+# -----------------------------------------------------------------------------
+# NOTE ON THE TARGET VARIABLE — read before changing anything below.
+# This dataset ships with NO ground-truth default/repayment label. The
+# "proxy_risk_score" / "proxy_high_risk" target built by src/proxy_scoring.py
+# is a documented, transparent HEURISTIC used only to validate that the
+# modeling pipeline (leakage prevention, CV, calibration, cost-sensitive
+# thresholding) is correct end-to-end. It is NOT a real risk model. Replace
+# `target.mode` with "real_label" and point `target.label_column` at a true
+# outcome column the moment one is available — every downstream module
+# already supports that switch without further code changes.
+# -----------------------------------------------------------------------------
+target:
+  mode: "proxy"            # "proxy" | "real_label"
+  label_column: null        # set this to the real label column name when mode = "real_label"
+  proxy:
+    quantile_threshold: 0.70   # top X% of proxy_risk_score flagged as "high risk"
+    weights:
+      low_checking: 0.25
+      low_saving: 0.15
+      high_installment: 0.25
+      long_duration: 0.15
+      low_job_skill: 0.15
+      young_age_extreme: 0.05
+
+features:
+  numeric:
+    - "Age"
+    - "log_credit_amount"
+    - "Duration"
+    - "installment_proxy"
+    - "saving_ord"
+    - "checking_ord"
+    - "financial_buffer"
+    - "Job"
+  categorical:
+    - "Housing"
+    - "Purpose"
+  # Protected attribute: deliberately excluded from model features. Used only
+  # for the post-hoc fairness audit in src/fairness.py.
+  sensitive_attribute: "Sex"
+  long_duration_quantile: 0.75
+
+clustering:
+  k_search_range: [2, 8]     # inclusive range of k values evaluated
+  n_init: 10
+
+modeling:
+  test_size: 0.25
+  cv_folds: 5
+  models:
+    logistic_regression:
+      max_iter: 1000
+    random_forest:
+      n_estimators: 300
+    gradient_boosting: {}
+  primary_metric: "roc_auc"
+  decision_threshold_default: 0.5
+
+cost_sensitive:
+  # Illustrative 5:1 ratio widely cited alongside this dataset family in the
+  # credit-scoring literature. Replace with a cost matrix derived from real
+  # loss-given-default / cost-of-capital figures before any production use.
+  false_negative_cost: 5
+  false_positive_cost: 1
