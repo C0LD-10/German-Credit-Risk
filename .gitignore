@@ -1,0 +1,24 @@
+# Environments
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Generated artifacts (reproducible via `python -m src.pipeline`)
+data/processed/*.parquet
+models/*.joblib
+models/*.json
+reports/*.md
+reports/figures/*.png
+
+# Keep directory structure in version control even when generated files are ignored
+!data/processed/.gitkeep
+!models/.gitkeep
+!reports/.gitkeep
+!reports/figures/.gitkeep
+
+# OS / editor
+.DS_Store
+.ipynb_checkpoints/
+.vscode/
